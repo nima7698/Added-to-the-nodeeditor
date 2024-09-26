@@ -2,60 +2,82 @@
 
 #include <QtCore/QUuid>
 
-#include "PortType.hpp"
+#include "Export.hpp"
+
+#include "Definitions.hpp"
 
 class QPointF;
 
 namespace QtNodes
 {
 
-class Node;
+class ConnectionGraphicsObject;
 
 /// Stores currently draggind end.
 /// Remembers last hovered Node.
-class ConnectionState
+class NODE_EDITOR_PUBLIC ConnectionState
 {
 public:
 
-  ConnectionState(PortType port = PortType::None)
-    : _requiredPort(port)
+  /// Defines whether we construct a new connection
+  /// or it is already binding two nodes.
+  enum LooseEnd
+  {
+    Pending   = 0,
+    Connected = 1
+  };
+
+public:
+
+  ConnectionState(ConnectionGraphicsObject & cgo)
+    : _cgo(cgo)
+    , _connectedState(LooseEnd::Pending)
+    , _hovered(false)
   {}
 
-  ConnectionState(const ConnectionState&) = delete;
-  ConnectionState operator=(const ConnectionState&) = delete;
+  ConnectionState(ConnectionState const&) = delete;
+  ConnectionState(ConnectionState &&) = delete;
+
+  ConnectionState&
+  operator=(ConnectionState const&) = delete;
+  ConnectionState&
+  operator=(ConnectionState &&) = delete;
 
   ~ConnectionState();
 
 public:
 
-  void setRequiredPort(PortType end)
-  { _requiredPort = end; }
+  PortType
+  requiredPort() const;
+  bool
+  requiresPort() const;
 
-  PortType requiredPort() const
-  { return _requiredPort; }
-
-  bool requiresPort() const
-  { return _requiredPort != PortType::None; }
-
-  void setNoRequiredPort()
-  { _requiredPort = PortType::None; }
+  bool
+  hovered() const;
+  void
+  setHovered(bool hovered);
 
 public:
 
-  void interactWithNode(Node* node);
+  /// Caches NodeId for further interaction.
+  void
+  setLastHoveredNode(NodeId const nodeId);
 
-  void setLastHoveredNode(Node* node);
+  NodeId
+  lastHoveredNode() const;
 
-  Node*
-  lastHoveredNode() const
-  { return _lastHoveredNode; }
-
-  void resetLastHoveredNode();
+  void
+  resetLastHoveredNode();
 
 private:
 
-  PortType _requiredPort;
+  ConnectionGraphicsObject & _cgo;
 
-  Node* _lastHoveredNode{nullptr};
+  LooseEnd _connectedState;
+
+  bool _hovered;
+
+  NodeId _lastHoveredNode{InvalidNodeId};
+
 };
 }

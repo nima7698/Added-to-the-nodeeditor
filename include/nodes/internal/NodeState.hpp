@@ -3,79 +3,36 @@
 #include <vector>
 #include <unordered_map>
 
+#include <QtCore/QPointF>
 #include <QtCore/QUuid>
 
 #include "Export.hpp"
 
-#include "PortType.hpp"
+#include "Definitions.hpp"
 #include "NodeData.hpp"
-#include "memory.hpp"
 
 namespace QtNodes
 {
 
-class Connection;
-class NodeDataModel;
+class ConnectionGraphicsObject;
+class NodeGraphicsObject;
 
-/// Contains vectors of connected input and output connections.
-/// Stores bool for reacting on hovering connections
+/// Stores bool for hovering connections and resizing flag.
 class NODE_EDITOR_PUBLIC NodeState
 {
 public:
-  enum ReactToConnectionState
-  {
-    REACTING,
-    NOT_REACTING
-  };
+
+  NodeState(NodeGraphicsObject & ngo);
 
 public:
-
-  NodeState(std::unique_ptr<NodeDataModel> const &model);
-
-public:
-
-  using ConnectionPtrSet =
-          std::unordered_map<QUuid, Connection*>;
-
-  /// Returns vector of connections ID.
-  /// Some of them can be empty (null)
-  std::vector<ConnectionPtrSet> const&
-  getEntries(PortType) const;
-
-  std::vector<ConnectionPtrSet> &
-  getEntries(PortType);
-
-  ConnectionPtrSet
-  connections(PortType portType, PortIndex portIndex) const;
-
-  void
-  setConnection(PortType portType,
-                PortIndex portIndex,
-                Connection& connection);
-
-  void
-  eraseConnection(PortType portType,
-                  PortIndex portIndex,
-                  QUuid id);
-
-  ReactToConnectionState
-  reaction() const;
-
-  PortType
-  reactingPortType() const;
-
-  NodeDataType
-  reactingDataType() const;
-
-  void
-  setReaction(ReactToConnectionState reaction,
-              PortType reactingPortType = PortType::None,
-
-              NodeDataType reactingDataType =
-                NodeDataType());
 
   bool
-  isReacting() const;
+  hovered() const
+  { return _hovered; }
+
+  void
+  setHovered(bool hovered = true)
+  { _hovered = hovered; }
 
   void
   setResizing(bool resizing);
@@ -83,15 +40,23 @@ public:
   bool
   resizing() const;
 
+  ConnectionGraphicsObject const *
+  connectionForReaction() const;
+
+  void
+  storeConnectionForReaction(ConnectionGraphicsObject const * cgo);
+
+  void
+  resetConnectionForReaction();
+
 private:
 
-  std::vector<ConnectionPtrSet> _inConnections;
-  std::vector<ConnectionPtrSet> _outConnections;
+  NodeGraphicsObject & _ngo;
 
-  ReactToConnectionState _reaction;
-  PortType     _reactingPortType;
-  NodeDataType _reactingDataType;
+  bool _hovered;
 
   bool _resizing;
+
+  ConnectionGraphicsObject const * _connectionForReaction;
 };
 }
